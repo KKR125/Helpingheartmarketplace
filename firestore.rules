@@ -1,47 +1,53 @@
 rules_version = '2';
 service cloud.firestore {
  match /databases/{database}/documents {
-  function signedIn(){return request.auth != null;}
+  function signedIn(){ return request.auth != null; }
+  function admin(){ return signedIn() && request.auth.token.admin == true; }
+  function blockedEitherWay(otherUid){
+   return exists(/databases/$(database)/documents/profiles/$(request.auth.uid)/blocks/$(otherUid))
+    || exists(/databases/$(database)/documents/profiles/$(otherUid)/blocks/$(request.auth.uid));
+  }
+
   match /profiles/{uid} {
    allow read: if true;
    allow create: if signedIn() && request.auth.uid == uid
-    && request.resource.data.displayName is string
-    && request.resource.data.displayName.size() <= 50
-    && request.resource.data.city is string
-    && request.resource.data.city.size() <= 60
-    && request.resource.data.about is string
-    && request.resource.data.about.size() <= 250;
+    && request.resource.data.displayName is string && request.resource.data.displayName.size() <= 50
+    && request.resource.data.city is string && request.resource.data.city.size() <= 60
+    && request.resource.data.about is string && request.resource.data.about.size() <= 250;
    allow update: if signedIn() && request.auth.uid == uid
-    && request.resource.data.displayName is string
-    && request.resource.data.displayName.size() <= 50
-    && request.resource.data.city is string
-    && request.resource.data.city.size() <= 60
-    && request.resource.data.about is string
-    && request.resource.data.about.size() <= 250;
+    && request.resource.data.displayName is string && request.resource.data.displayName.size() <= 50
+    && request.resource.data.city is string && request.resource.data.city.size() <= 60
+    && request.resource.data.about is string && request.resource.data.about.size() <= 250;
    allow delete: if signedIn() && request.auth.uid == uid;
    match /favourites/{listingId} {
     allow read, create, delete: if signedIn() && request.auth.uid == uid;
     allow update: if false;
    }
+   match /blocks/{blockedUid} {
+    allow read, create, delete: if signedIn() && request.auth.uid == uid && blockedUid != uid;
+    allow update: if false;
+   }
   }
+
   match /listings/{id} {
-   allow read: if true;
+   allow read: if resource.data.status == 'active' || (signedIn() && resource.data.sellerId == request.auth.uid) || admin();
    allow create: if signedIn() && request.resource.data.sellerId == request.auth.uid
-    && request.resource.data.title is string && request.resource.data.title.size() > 0
-    && request.resource.data.title.size() <= 90
+    && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 90
     && request.resource.data.description is string && request.resource.data.description.size() <= 2000
-    && request.resource.data.category is string
-    && request.resource.data.condition is string
+    && request.resource.data.category is string && request.resource.data.condition is string
     && request.resource.data.city is string && request.resource.data.city.size() <= 80
-    && request.resource.data.price is number && request.resource.data.price > 0
-    && request.resource.data.price <= 10000000
+    && request.resource.data.price is number && request.resource.data.price > 0 && request.resource.data.price <= 10000000
     && request.resource.data.status == 'active'
-    && request.resource.data.photos is list
-    && request.resource.data.photos.size() <= 6;
-   allow update: if signedIn() && resource.data.sellerId == request.auth.uid
-    && request.resource.data.sellerId == resource.data.sellerId;
-   allow delete: if signedIn() && resource.data.sellerId == request.auth.uid;
+    && request.resource.data.photos is list && request.resource.data.photos.size() <= 6;
+   allow update: if (signedIn() && resource.data.sellerId == request.auth.uid
+      && request.resource.data.sellerId == resource.data.sellerId
+      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title','description','category','condition','city','price','photos','photo','status','updatedAt'])
+      && request.resource.data.status in ['active','paused'])
+     || (admin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','moderatedAt','moderatedBy'])
+      && request.resource.data.status in ['active','paused','removed']);
+   allow delete: if signedIn() && resource.data.sellerId == request.auth.uid || admin();
   }
+
   match /messages/{id} {
    allow create: if signedIn()
     && request.resource.data.senderId == request.auth.uid
@@ -51,14 +57,28 @@ service cloud.firestore {
     && request.resource.data.participants.size() == 2
     && request.resource.data.participants.hasAll([request.auth.uid, request.resource.data.receiverId])
     && request.resource.data.text is string
-    && request.resource.data.text.size() > 0
-    && request.resource.data.text.size() <= 1000;
-   allow read: if signedIn() && (
-    resource.data.participants.hasAny([request.auth.uid])
-    || resource.data.senderId == request.auth.uid
-    || resource.data.receiverId == request.auth.uid
-   );
+    && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000
+    && !blockedEitherWay(request.resource.data.receiverId);
+   allow read: if signedIn() && resource.data.participants.hasAny([request.auth.uid]);
    allow update, delete: if false;
+  }
+
+  match /reports/{reportId} {
+   allow create: if signedIn()
+    && request.resource.data.reporterId == request.auth.uid
+    && request.resource.data.targetType in ['listing','member']
+    && request.resource.data.targetId is string
+    && request.resource.data.reason is string
+    && request.resource.data.reason.size() <= 100
+    && request.resource.data.details is string
+    && request.resource.data.details.size() <= 800
+    && request.resource.data.status == 'open';
+   allow read: if admin() || (signedIn() && resource.data.reporterId == request.auth.uid);
+   allow update: if admin()
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedAt','reviewedBy'])
+    && request.resource.data.status in ['reviewed','dismissed']
+    && request.resource.data.reviewedBy == request.auth.uid;
+   allow delete: if admin();
   }
  }
 }
