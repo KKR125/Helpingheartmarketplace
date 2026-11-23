@@ -6,7 +6,7 @@ Responsive OLX-inspired classifieds marketplace interface for India.
 - Phase 1: marketplace foundation, listing creation and Firebase-ready architecture.
 - Phase 2: email/password authentication and user profiles.
 - Phase 3: blue/pink marketplace redesign, search and filters, multi-photo listings, favourites, seller profiles and inbox.
-- Phase 4: report listing/member flows, user blocking, moderator report queue, admin listing pause/removal, seller listing edit/pause/reactivate/delete, stronger Firestore/Storage rules, and expanded policy drafts.
+- Phase 4: report listing/member flows, user blocking that prevents new messages, moderator report queue, admin listing pause/removal, seller listing edit/pause/reactivate/delete, foreground alerts for incoming messages, stronger Firestore/Storage rules, and expanded policy drafts.
 
 ## Firebase setup required before real use
 1. Create a Firebase project and register a Web App.
