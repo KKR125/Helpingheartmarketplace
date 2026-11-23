@@ -1,40 +1,37 @@
 # HelpingHeart Marketplace
 
-A responsive, OLX-inspired classifieds marketplace interface for India.
+Responsive OLX-inspired classifieds marketplace interface for India.
 
-## Phase 1 — marketplace foundation
-- Responsive marketplace homepage, search, category and condition filters, and price sorting.
-- Firebase-ready listing creation with item details, city, price and image uploads.
-- Listing detail view and seller messaging foundation.
-- Preview mode is clearly labelled when Firebase is not configured.
+## Completed development phases
+- Phase 1: marketplace foundation, listing creation and Firebase-ready architecture.
+- Phase 2: email/password authentication and user profiles.
+- Phase 3: blue/pink marketplace redesign, search and filters, multi-photo listings, favourites, seller profiles and inbox.
+- Phase 4: report listing/member flows, user blocking, moderator report queue, admin listing pause/removal, seller listing edit/pause/reactivate/delete, stronger Firestore/Storage rules, and expanded policy drafts.
 
-## Phase 2 — accounts and profiles
-- Firebase email/password registration and sign-in.
-- User profile documents with display name, broad city, short bio and optional profile photo.
-- Profile editing and personal listing management.
-- Owner-restricted profile and Storage writes.
-
-## Phase 3 — marketplace experience
-- OLX-inspired blue and pink visual refresh, responsive header and category navigation.
-- Listing cards with favourite controls and multi-photo detail galleries.
-- Expanded search and filters: category, condition, minimum/maximum price, city/area and sort order.
-- Synced favourites stored under each signed-in user's profile.
-- Seller profile view with active listings.
-- Live Firestore inbox subscription and message replies, scoped to conversation participants.
-- Listing uploads support up to six JPG, PNG or WEBP images (5 MB each).
-
-## Firebase setup required
+## Firebase setup required before real use
 1. Create a Firebase project and register a Web App.
 2. Enable Email/Password in Firebase Authentication.
-3. Create a Firestore database and enable Firebase Storage.
-4. Paste the Firebase Web App config into `firebase-config.js`.
-5. Publish the updated `firestore.rules` and existing `storage.rules` in Firebase Console.
-6. Add `helpingheartmarketplace.vercel.app` to Firebase Authentication's authorised domains.
-7. Test registration, listing uploads, favourites and messages using separate test accounts.
+3. Create Firestore and enable Storage.
+4. Paste Firebase Web App config into firebase-config.js.
+5. Publish the current firestore.rules and storage.rules in Firebase Console.
+6. Add helpingheartmarketplace.vercel.app to Firebase Authentication authorised domains.
+7. Test signup, profile, listing/photo upload, edit/pause/reactivate, favourites, messages, block and report with separate accounts.
 
-**Important:** Firebase is not connected until the Web App config and Firebase Console setup are completed. The new Firestore rules must be published before favourites and inbox queries will work. Existing messages created before Phase 3 do not contain the `participants` field and will not appear in the new inbox; new messages include it.
+The production site remains a preview until Firebase is configured and tested. Repository rule files do not automatically publish themselves to Firebase.
+
+## Phase 4 admin setup
+Admin UI appears only when a signed-in account has the trusted Firebase custom claim admin: true. Never add an isAdmin field to a user-editable profile and never grant admin rights from frontend code. An adult project operator must grant the custom claim from a trusted environment using Firebase Admin SDK, then have the admin user sign out and sign in again. See ADMIN_SETUP.md.
+
+## Current limitations
+- No automated phone/email identity verification, KYC, seller badges or fraud detection.
+- No push notifications, payment processing, escrow, shipping, dispute-resolution workflow or automatic refunds.
+- Moderation is a basic report queue and manual listing status action; it is not 24/7 human moderation.
+- No full account deletion/export workflow, retention automation or appeals workflow.
+- No real-time message read receipts or attachment scanning.
+- Legal pages are drafts and need operator details and adult legal/privacy review.
+- Public profile reads are enabled for seller profile display. Store only non-sensitive profile fields.
 
 ## Safety and launch readiness
-This is a technical preview, not a fully verified OLX replacement. Before any public launch, an adult operator must review age eligibility, identity and seller verification, moderation/report handling, prohibited listings, privacy and data retention, fraud prevention, dispute handling, and local legal requirements. Do not publish home addresses, personal phone numbers, OTPs, passwords or financial credentials. HelpingHeart Marketplace does not process payments. In-person transactions must be handled by adults using safe public arrangements.
+This is not yet a verified OLX replacement. Before public launch, an adult operator must review age eligibility, local legal obligations, privacy, data retention, prohibited listings, moderation staffing, account recovery, fraud response and support contact details. Do not publish home addresses, private phone numbers, OTPs, passwords or financial credentials. In-person transactions must be handled by adults using safe public arrangements. HelpingHeart Marketplace does not process payments.
 
-Never put Firebase service-account private keys or other server secrets in frontend files.
+Never commit Firebase service-account keys or other server secrets.
