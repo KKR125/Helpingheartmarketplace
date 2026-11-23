@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  function signedIn(){return request.auth != null;}
+  match /listings/{id} {
+   allow read: if true;
+   allow create: if signedIn() && request.resource.data.sellerId == request.auth.uid
+    && request.resource.data.title is string && request.resource.data.title.size() > 0
+    && request.resource.data.title.size() <= 90
+    && request.resource.data.description is string && request.resource.data.description.size() <= 2000
+    && request.resource.data.price is number && request.resource.data.price > 0
+    && request.resource.data.price <= 10000000 && request.resource.data.status == 'active';
+   allow update, delete: if signedIn() && resource.data.sellerId == request.auth.uid;
+  }
+  match /messages/{id} {
+   allow create: if signedIn() && request.resource.data.senderId == request.auth.uid
+    && request.resource.data.receiverId is string && request.resource.data.text is string
+    && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000;
+   allow read: if signedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+   allow update, delete: if false;
+  }
+ }
+}
