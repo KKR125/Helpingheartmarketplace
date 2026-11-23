@@ -3,7 +3,7 @@ service cloud.firestore {
  match /databases/{database}/documents {
   function signedIn(){return request.auth != null;}
   match /profiles/{uid} {
-   allow read: if signedIn() || true;
+   allow read: if true;
    allow create: if signedIn() && request.auth.uid == uid
     && request.resource.data.displayName is string
     && request.resource.data.displayName.size() <= 50
@@ -19,6 +19,10 @@ service cloud.firestore {
     && request.resource.data.about is string
     && request.resource.data.about.size() <= 250;
    allow delete: if signedIn() && request.auth.uid == uid;
+   match /favourites/{listingId} {
+    allow read, create, delete: if signedIn() && request.auth.uid == uid;
+    allow update: if false;
+   }
   }
   match /listings/{id} {
    allow read: if true;
@@ -26,15 +30,34 @@ service cloud.firestore {
     && request.resource.data.title is string && request.resource.data.title.size() > 0
     && request.resource.data.title.size() <= 90
     && request.resource.data.description is string && request.resource.data.description.size() <= 2000
+    && request.resource.data.category is string
+    && request.resource.data.condition is string
+    && request.resource.data.city is string && request.resource.data.city.size() <= 80
     && request.resource.data.price is number && request.resource.data.price > 0
-    && request.resource.data.price <= 10000000 && request.resource.data.status == 'active';
-   allow update, delete: if signedIn() && resource.data.sellerId == request.auth.uid;
+    && request.resource.data.price <= 10000000
+    && request.resource.data.status == 'active'
+    && request.resource.data.photos is list
+    && request.resource.data.photos.size() <= 6;
+   allow update: if signedIn() && resource.data.sellerId == request.auth.uid
+    && request.resource.data.sellerId == resource.data.sellerId;
+   allow delete: if signedIn() && resource.data.sellerId == request.auth.uid;
   }
   match /messages/{id} {
-   allow create: if signedIn() && request.resource.data.senderId == request.auth.uid
-    && request.resource.data.receiverId is string && request.resource.data.text is string
-    && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000;
-   allow read: if signedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+   allow create: if signedIn()
+    && request.resource.data.senderId == request.auth.uid
+    && request.resource.data.receiverId is string
+    && request.resource.data.receiverId != request.auth.uid
+    && request.resource.data.participants is list
+    && request.resource.data.participants.size() == 2
+    && request.resource.data.participants.hasAll([request.auth.uid, request.resource.data.receiverId])
+    && request.resource.data.text is string
+    && request.resource.data.text.size() > 0
+    && request.resource.data.text.size() <= 1000;
+   allow read: if signedIn() && (
+    resource.data.participants.hasAny([request.auth.uid])
+    || resource.data.senderId == request.auth.uid
+    || resource.data.receiverId == request.auth.uid
+   );
    allow update, delete: if false;
   }
  }
