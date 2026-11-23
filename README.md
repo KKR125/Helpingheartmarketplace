@@ -6,14 +6,14 @@ Responsive OLX-inspired classifieds marketplace interface for India.
 - Phase 1: marketplace foundation, listing creation and Firebase-ready architecture.
 - Phase 2: email/password authentication and user profiles.
 - Phase 3: blue/pink marketplace redesign, search and filters, multi-photo listings, favourites, seller profiles and inbox.
-- Phase 4: report listing/member flows, user blocking that prevents new messages, moderator report queue, admin listing pause/removal, seller listing edit/pause/reactivate/delete, foreground alerts for incoming messages, stronger Firestore/Storage rules, and expanded policy drafts.
+- Phase 4: report listing/member flows, user blocking that prevents new messages, moderator report queue, admin listing pause/removal, seller listing edit/pause/reactivate/delete, foreground alerts for incoming messages, stronger Firestore rules, and expanded policy drafts.
 
 ## Firebase setup required before real use
 1. Create a Firebase project and register a Web App.
 2. Enable Email/Password in Firebase Authentication.
 3. Create Cloud Firestore. Do not enable Firebase Storage; media is stored in Cloudinary.
 4. Paste Firebase Web App config into firebase-config.js.
-5. Publish firestore.rules in Firebase Console. The old storage.rules file is not used.
+5. Publish firestore.rules in Firebase Console.
 6. Add helpingheartmarketplace.vercel.app to Firebase Authentication authorised domains.
 7. Create the two signed Cloudinary upload presets and add the required Vercel environment variables described in CLOUDINARY_FIREBASE_SETUP.md.
 8. Test signup, profile, listing/photo upload, chat attachments, edit/pause/reactivate, favourites, messages, block and report with adult supervision.
