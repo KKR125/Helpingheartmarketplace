@@ -49,6 +49,23 @@ service cloud.firestore {
    allow delete: if signedIn() && resource.data.sellerId == request.auth.uid || admin();
   }
 
+  function validAttachment(a) {
+   return a is map
+    && a.keys().hasOnly(['url','name','resourceType','format','bytes','mimeType'])
+    && a.url is string && a.url.matches('https://res\\.cloudinary\\.com/.+')
+    && a.name is string && a.name.size() > 0 && a.name.size() <= 120
+    && a.resourceType in ['image','raw']
+    && a.format is string && a.format.size() <= 12
+    && a.bytes is number && a.bytes > 0 && a.bytes <= 5 * 1024 * 1024
+    && a.mimeType is string && a.mimeType.size() <= 100;
+  }
+  function validAttachments() {
+   return request.resource.data.attachments is list
+    && request.resource.data.attachments.size() <= 3
+    && (request.resource.data.attachments.size() == 0 || validAttachment(request.resource.data.attachments[0]))
+    && (request.resource.data.attachments.size() < 2 || validAttachment(request.resource.data.attachments[1]))
+    && (request.resource.data.attachments.size() < 3 || validAttachment(request.resource.data.attachments[2]));
+  }
   match /messages/{id} {
    allow create: if signedIn()
     && request.resource.data.senderId == request.auth.uid
@@ -58,7 +75,9 @@ service cloud.firestore {
     && request.resource.data.participants.size() == 2
     && request.resource.data.participants.hasAll([request.auth.uid, request.resource.data.receiverId])
     && request.resource.data.text is string
-    && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000
+    && request.resource.data.text.size() <= 1000
+    && ('attachments' in request.resource.data ? validAttachments() : request.resource.data.text.size() > 0)
+    && (request.resource.data.text.size() > 0 || ('attachments' in request.resource.data && request.resource.data.attachments.size() > 0))
     && !blockedEitherWay(request.resource.data.receiverId);
    allow read: if signedIn() && resource.data.participants.hasAny([request.auth.uid]);
    allow update, delete: if false;
