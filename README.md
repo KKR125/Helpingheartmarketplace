@@ -11,11 +11,12 @@ Responsive OLX-inspired classifieds marketplace interface for India.
 ## Firebase setup required before real use
 1. Create a Firebase project and register a Web App.
 2. Enable Email/Password in Firebase Authentication.
-3. Create Firestore and enable Storage.
+3. Create Cloud Firestore. Do not enable Firebase Storage; media is stored in Cloudinary.
 4. Paste Firebase Web App config into firebase-config.js.
-5. Publish the current firestore.rules and storage.rules in Firebase Console.
+5. Publish firestore.rules in Firebase Console. The old storage.rules file is not used.
 6. Add helpingheartmarketplace.vercel.app to Firebase Authentication authorised domains.
-7. Test signup, profile, listing/photo upload, edit/pause/reactivate, favourites, messages, block and report with separate accounts.
+7. Create the two signed Cloudinary upload presets and add the required Vercel environment variables described in CLOUDINARY_FIREBASE_SETUP.md.
+8. Test signup, profile, listing/photo upload, chat attachments, edit/pause/reactivate, favourites, messages, block and report with adult supervision.
 
 The production site remains a preview until Firebase is configured and tested. Repository rule files do not automatically publish themselves to Firebase.
 
@@ -27,11 +28,14 @@ Admin UI appears only when a signed-in account has the trusted Firebase custom c
 - No push notifications, payment processing, escrow, shipping, dispute-resolution workflow or automatic refunds.
 - Moderation is a basic report queue and manual listing status action; it is not 24/7 human moderation.
 - No full account deletion/export workflow, retention automation or appeals workflow.
-- No real-time message read receipts or attachment scanning.
+- No real-time message read receipts, attachment scanning or automatic media moderation. Cloudinary media is delivered through shareable URLs; users must never upload sensitive personal documents.
 - Legal pages are drafts and need operator details and adult legal/privacy review.
 - Public profile reads are enabled for seller profile display. Store only non-sensitive profile fields.
 
 ## Safety and launch readiness
 This is not yet a verified OLX replacement. Before public launch, an adult operator must review age eligibility, local legal obligations, privacy, data retention, prohibited listings, moderation staffing, account recovery, fraud response and support contact details. Do not publish home addresses, private phone numbers, OTPs, passwords or financial credentials. In-person transactions must be handled by adults using safe public arrangements. HelpingHeart Marketplace does not process payments.
 
-Never commit Firebase service-account keys or other server secrets.
+Never commit Firebase service-account keys, Cloudinary API secrets or other server secrets.
+
+## Media uploads
+Listing photos, profile photos and chat attachments use Cloudinary. Firebase Authentication verifies the signed-in user; Firestore stores listing/message metadata and Cloudinary URLs. The Vercel API route `/api/cloudinary-signature` verifies the Firebase ID token before creating a Cloudinary upload signature. Firebase Storage is not used. See CLOUDINARY_FIREBASE_SETUP.md for beginner setup steps.
