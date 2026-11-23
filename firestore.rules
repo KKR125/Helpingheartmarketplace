@@ -40,6 +40,7 @@ service cloud.firestore {
     && request.resource.data.status == 'active'
     && request.resource.data.photos is list && request.resource.data.photos.size() <= 6;
    allow update: if (signedIn() && resource.data.sellerId == request.auth.uid
+      && resource.data.status in ['active','paused']
       && request.resource.data.sellerId == resource.data.sellerId
       && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title','description','category','condition','city','price','photos','photo','status','updatedAt'])
       && request.resource.data.status in ['active','paused'])
